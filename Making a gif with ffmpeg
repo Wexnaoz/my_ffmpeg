@@ -1,0 +1,51 @@
+My FFMpeg parameters for making gif
+
+1) Creating a palette
+
+ffmpeg -ss %start_time% -t %duration% -i %input% -vf scale=%scale%:-1:flags=lanczos",palettegen=stats_mode=diff" -y %output%.png
+
+2) Creating a gif
+
+ffmpeg -ss %start_time% -t %duration% -i %input% -i %palette_png% -lavfi scale=%scale%:-1:flags=lanczos,paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle -y %output%.gif
+
+OR
+
+ffmpeg -ss "%start_time%" -t "%duration%" -i "%input%" -vf scale="%scale%":-1:flags=lanczos",palettegen" -y "%output%PNG.png"
+ffmpeg -ss "%start_time%" -t "%duration%" -i "%input%" -i "%output%PNG.png" -lavfi scale="%scale%":-1:flags=lanczos" [x]; [x][1:v] paletteuse" -y "%output%GIF.gif"
+
+*You can change the -t %duration% parameter to "-to %HH:MM:SS%" if you want.
+
+ADDING A WATERMARK LOGO IN A GIF
+https://stackoverflow.com/questions/46060013/how-to-add-watermark-in-a-gif-with-ffmpeg
+
+ffmpeg -i in.mp4 -i watermark.png -filter_complex "[0]fps=10,scale=320:-1:flags=lanczos[bg];[bg][1]overlay=W-w-5:H-h-5,palettegen" palette.png
+ffmpeg -i in.mp4 -i watermark.png -i palette.png -filter_complex "[0]fps=10,scale=320:-1:flags=lanczos[bg];[bg][1]overlay=W-w-5:H-h-5[x];[x][2]paletteuse=dither=bayer:bayer_scale=3" output.gif
+
+----
+https://cassidy.codes/blog/2017/04/25/ffmpeg-frames-to-gif-optimization/
+http://blog.pkh.me/p/21-high-quality-gif-with-ffmpeg.html#usage
+
+#######################################################
+## A Forum Turning MP4 into gif using ffmpeg command ##
+#######################################################
+# Source: https://www.youtube.com/post/UgkxrxZ-yZKF_zpmesPZEQzYVKjCt-4-c-bo
+# Archive: https://archive.ph/vztfa
+
+Turning mp4 into gif using ffmpeg command
+
+ffmpeg -i input_video.mp4 -vf "fps=15,scale=320:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" output_gif.gif
+
+This command takes an input video (in this example, named input_video.mp4) and converts it into a high-quality GIF format. Here's a breakdown of what each part of the command does:
+
+-i input_video.mp4: specifies the input video file to be converted into a GIF
+
+-vf: sets the video filterchain that will be applied to the input video
+
+"fps=15,scale=320:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse": this filterchain does the following:
+
+fps=15: sets the frame rate of the output GIF to 15 frames per second
+scale=320:-1:flags=lanczos: scales the video down to 320 pixels in width, maintaining the aspect ratio. The lanczos flag specifies the scaling algorithm to be used, which produces a higher quality output compared to other algorithms.
+split[s0][s1]: splits the video into two streams, one for the scaled video (s0) and one for the color palette (s1)
+[s0]palettegen[p]: generates a color palette from the scaled video stream and assigns it to the [p] label
+[s1][p]paletteuse: applies the generated color palette to the original video stream, resulting in the final output GIF.
+This command can be customized to suit different needs, such as adjusting the frame rate or output resolution. It's also worth noting that GIFs have a limited color palette, so the quality of the output may not be as good as the original video. Nonetheless, this command is a great way to create a high-quality GIF from a video, which can be useful for sharing highlights or snippets of a longer video on social media.
