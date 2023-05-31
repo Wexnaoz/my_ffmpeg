@@ -1,0 +1,137 @@
+📝Useful FFMpeg commands
+
+➡️How to stack two videos side-by-side in a single window with FFMPEG:
+
+ffmpeg -i video1.mp4 -i video2.mp4 -filter_complex hstack hstack.mp4
+
+--
+➡️How to stack one video on top of another in a single window with FFMPEG:
+
+ffmpeg -i video1.mp4 -i video2.mp4 -filter_complex vstack vstack.mp4
+
+--
+➡️How to superimpose two videos on a static background image.
+
+ffmpeg -loop 1 -i static.jpg -i video1.mp4 -i video2.mp4 -filter_complex "[1:v]scale=(iw/1)-20:-1[a]; [2:v]scale=(iw/1)-20:-1[b]; [0:v][a]overlay=10:(main_h/2)-(overlay_h/2):shortest=1[c]; [c][b]overlay=main_w-overlay_w-10:(main_h/2)-(overlay_h/2)[video]" -map "[video]" output.mp4
+Example shows a 640x480 video and 320x240 video superimposed on a 1920x1080 image.
+
+--
+➡️How to join | combine | merge four (4) videos into a single video to obtain a single window mosaic effect with FFMPEG: 
+
+ffmpeg -i test.mp4 -i testbw.mp4 -i test.wmv -i testbw.wmv -filter_complex "nullsrc=size=640x480 [base]; [0:v] setpts=PTS-STARTPTS, scale=320x240 [upperleft]; [1:v] setpts=PTS-STARTPTS, scale=320x240 [upperright]; [2:v] setpts=PTS-STARTPTS, scale=320x240 [lowerleft]; [3:v] setpts=PTS-STARTPTS, scale=320x240 [lowerright]; [base][upperleft] overlay=shortest=1 [tmp1]; [tmp1][upperright] overlay=shortest=1:x=320 [tmp2]; [tmp2][lowerleft] overlay=shortest=1:y=240 [tmp3]; [tmp3][lowerright] overlay=shortest=1:x=320:y=240" -c:v libx264 4_video_windows.mp4
+
+💡Note: Four 640x480 videos were used in this example. Adjust sizing parameters accordingly.
+
+--
+➡️How to join | combine | merge two videos into a single video with a side by side effect (for comparison) with FFMPEG:
+
+ffmpeg -i test.mp4 -i testbw.mp4 -filter_complex "[0:v]setpts=PTS-STARTPTS, pad=iw*2:ih[bg]; [1:v]setpts=PTS-STARTPTS[fg]; [bg][fg]overlay=w" 2_side_by_side.mp4
+
+--
+➡️How to add a watermark or logo to any corner or the center of a video with FFMPEG.
+
+ffmpeg –i video.mp4 -i logo.png -filter_complex "overlay=10:10" top_left.mp4
+ffmpeg –i video.mp4 -i logo.png -filter_complex "overlay=main_w-overlay_w-10:10" top_right.mp4
+ffmpeg –i video.mp4 -i logo.png -filter_complex "overlay=10:main_h-overlay_h-10" bottom_left.mp4
+ffmpeg –i video.mp4 -i logo.png -filter_complex "overlay=main_w-overlay_w-10/2:main_h-overlay_h-10/2" bottom_right.mp4
+ffmpeg -i video.mp4 -i logo.png -filter_complex "overlay=main_w/2-overlay_w/2:main_h/2-overlay_h/2" center.mp4
+
+--
+✂️How to trim | cut | split a video into 1 (or more) short clips with FFMPGEG:
+
+ffmpeg -i original.mp4 -vcodec copy -acodec copy -ss 00:00:00 -t 00:00:10 trim1.mp4
+ffmpeg -i original.mp4 -vcodec copy -acodec copy -ss 00:00:10 -t 00:00:10 trim2.mp4
+ffmpeg -i original.mp4 -vcodec copy -acodec copy -ss 00:00:20 -t 00:00:09 trim3.mp4
+ 
+-ss is the start time of the trim and -t is the duration of the trim.
+
+--
+➡️Add text on video and at the same time also add a logo image to the video
+
+https://superuser.com/questions/1407201/ffmpeg-i-want-to-add-text-on-video-and-at-the-same-time-also-want-to-add-logo-i
+
+ffmpeg -i video.mp4 -i logo.png -filter_complex "[0:v][1:v]overlay=10:10,drawtext=text='Hello World'" -c:a copy -movflags +faststart output.mp4
+
+--
+➡️How to add watermark in a gif with ffmpeg?
+
+https://stackoverflow.com/questions/46060013/how-to-add-watermark-in-a-gif-with-ffmpeg
+
+ffmpeg -i in.mp4 -i watermark.png -filter_complex "[0]fps=10,scale=320:-1:flags=lanczos[bg];[bg][1]overlay=W-w-5:H-h-5,palettegen" palette.png
+ffmpeg -i in.mp4 -i watermark.png -i palette.png -filter_complex "[0]fps=10,scale=320:-1:flags=lanczos[bg];[bg][1]overlay=W-w-5:H-h-5[x];[x][2]paletteuse=dither=bayer:bayer_scale=3" output.gif
+
+--
+🎬🔉How to create wave spectrum video with audio file
+
+ffmpeg -i input -filter_complex "[0:a]showwaves=s=1280x720:mode=line,format=yuv420p[v]" -map "[v]" -map 0:a -c:v libx264 -c:a copy output.mkv 
+
+OR
+
+ffmpeg -i "audio.wav" -filter_complex "[0:a]showwaves=mode=line:s=hd720:colors=Green@0.5|White@0.5|scale=sqrt[v];[v]drawtext=text='Audio example':fontcolor=White@0.5:fontsize=30:x=(w-text_w)/5:y=(h-text_h)/5[out]" -map "[out]" -map 0:a -pix_fmt yuv420p -c:v libx264 -c:a copy output2.mkv
+
+--
+✂️How to trim/cut clips without transcoding
+
+Cut three 1 minute videos from the original video:
+ffmpeg -i original.mpg -vcodec copy -acodec copy -ss 00:00:00 -t 00:01:00 first_minute.mpg
+ffmpeg -i original.mpg -vcodec copy -acodec copy -ss 00:01:00 -t 00:01:00 second_minute.mpg
+ffmpeg -i original.mpg -vcodec copy -acodec copy -ss 00:02:00 -t 00:01:00 third_minute.mpg
+
+🎞️Join three videos together:
+(create a file named inputMPG.txt)
+file '1.mpg'
+file '2.mpg'
+file '3.mpg'
+(then run the command to join)
+ffmpeg -f concat -i inputMPG.txt -codec copy output.mpg
+
+--
+🔽🎞️Downloading videos in multiple smaller files Youtube-dl/yt-dlp + ffmpeg
+
+youtube-dl -v "https://www.twitch.tv/videos/xxx" --hls-prefer-ffmpeg --external-downloader-args "-ss 00:30:00 -to 00:40:00"
+
+--
+🖼️🔉Add Background Image to an Audio File
+
+ffmpeg -loop 1 -f image2 -i airplane.jpg -i train_whistle_audio.aac -vf crop=in_w:in_w*9/16,scale=1920:1080,fps=fps=30 -pix_fmt yuv420p -vcodec libx264 -shortest train_whistle_airplane.mp4
+
+--
+➡️How to add a new audio (not mixing) into a video using ffmpeg?
+- https://stackoverflow.com/questions/11779490/how-to-add-a-new-audio-not-mixing-into-a-video-using-ffmpeg/11783474#11783474
+
+🎵Replace audio
+
+ffmpeg -i video.mp4 -i audio.wav -map 0:v -map 1:a -c:v copy -shortest output.mp4
+
+Replace audio with loop 
+
+0 = No loop 
+-1 = Infinite loop
+
+ffmpeg -stream_loop -1 -i video.mp4 -i audio.mp3 -vf crop=in_w:in_w*9/16,scale=1920:1080,fps=fps=30 -pix_fmt yuv420p -vcodec libx264 -shortest output.mp4 [?]
+ffmpeg -stream_loop -1 -i video.mp4 -i Audio.mp3 -vf crop=in_w:in_w*9/16,scale=1920:1080,fps=fps=60 -map 0:v -map 1:a -shortest Output.mp4 ✅
+  
+  [?] - Sometimes works in my case
+  ✅ - Works fine for me
+
+--
+🔁Repeat Loop
+
+https://video.stackexchange.com/questions/12905/repeat-loop-input-video-with-ffmpeg
+(Bash)
+
+ffmpeg -safe 0 -f concat -i <(for i in {1..9}; do printf "file '$PWD/%s'\n" test.mp4; done) -c copy output.mp4
+
+-stream_loop option (https://video.stackexchange.com/questions/12905/repeat-loop-input-video-with-ffmpeg/12906#12906)
+
+ffmpeg -stream_loop 3 -i input.mp4 -c copy output.mp4
+
+	This can avoid re-encoding because it can use stream copy.
+	0 means no loop, -1 means infinite loop.
+	This may not work with anything older than FFmpeg 4.0.
+
+🎬 Convert MP4 to Webm
+
+➡️https://stackoverflow.com/questions/47510489/ffmpeg-convert-mp4-to-webm-poor-results
+
+ffmpeg -i input.mp4 -c:v libvpx-vp9 -crf 30 -b:v 0 -b:a 128k -c:a libopus output.webm
