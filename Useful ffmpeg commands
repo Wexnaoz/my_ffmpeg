@@ -135,3 +135,11 @@ ffmpeg -stream_loop 3 -i input.mp4 -c copy output.mp4
 ➡️https://stackoverflow.com/questions/47510489/ffmpeg-convert-mp4-to-webm-poor-results
 
 ffmpeg -i input.mp4 -c:v libvpx-vp9 -crf 30 -b:v 0 -b:a 128k -c:a libopus output.webm
+
+🎬🔉How to create wave spectrum video with MP3 file
+
+ffmpeg -i input.mp3 -filter_complex "showwaves=s=1280x720:mode=line:colors=red:scale=sqrt,format=yuv420p[v]" -map "[v]" -map 0:a -c:v libx264 -c:a copy output.mp4
+
+🎬🔉Cycling through various colors as the video progress
+
+ffmpeg -i input.mp3 -filter_complex "showwaves=s=1280x720:mode=line:colors=palette,format=yuv420p[v]" -map "[v]" -map 0:a -c:v libx264 -c:a copy output.mp4
